@@ -5,7 +5,7 @@
  * Dependency Inversion: depende de config.js y shopify.js, no conoce el HTML del index.
  *
  * Cada sección tiene su propio método privado (Interface Segregation).
- * Clases visuales: Tailwind v4 con tokens del design system "The Editorial Sommelier".
+ * Clases visuales: Tailwind v4 con tokens del design system.
  */
 
 import config from './config.js';
@@ -41,7 +41,7 @@ function el(tag, classNames = '', attrs = {}) {
 }
 
 function createBtn(cta, extraClass = '') {
-  const isExternal = cta.action === 'instagram' || cta.action === 'shopify';
+  const isExternal = cta.action === 'instagram' || cta.action === 'shopify' || (cta.href && cta.href.startsWith('http'));
   const isPrimary  = (cta.type || 'primary') === 'primary';
 
   const baseClass = isPrimary
@@ -67,11 +67,9 @@ function icon(name, fill = 1) {
 /* ─── Secciones ────────────────────────────────────────────────── */
 
 function renderNav() {
-  // Logo
   const logoSlot = document.querySelector('[data-slot="nav-logo"]');
   if (logoSlot) logoSlot.textContent = config.brand.name;
 
-  // Links desktop
   const linksSlot = document.querySelector('[data-slot="nav-links"]');
   if (linksSlot) {
     config.nav.links.forEach(link => {
@@ -84,20 +82,16 @@ function renderNav() {
     });
   }
 
-  // CTA desktop
   const ctaSlot = document.querySelector('[data-slot="nav-cta"]');
   if (ctaSlot) {
-    const cartBtn = el('button', 'material-symbols-outlined text-on-surface hover:opacity-80 transition-opacity');
-    cartBtn.textContent = 'shopping_bag';
-
     const contactBtn = el('a',
       'border border-outline-variant/40 text-secondary px-5 py-2 font-bold uppercase text-xs tracking-widest hover:bg-surface-container-high transition-all rounded',
       {
-        href:   `mailto:${config.brand.email}`,
-        title:  `Contactar ventas: ${config.brand.email}`,
+        href:  `mailto:${config.brand.email}`,
+        title: `Contactar: ${config.brand.email}`,
       }
     );
-    contactBtn.textContent = 'Contactar Ventas';
+    contactBtn.textContent = 'Contacto';
 
     const buyBtn = el('a',
       'bg-primary text-on-primary px-6 py-2 font-bold uppercase text-xs tracking-widest hover:opacity-90 transition-opacity rounded',
@@ -105,12 +99,10 @@ function renderNav() {
     );
     buyBtn.textContent = config.nav.cta.label;
 
-    ctaSlot.appendChild(cartBtn);
     ctaSlot.appendChild(contactBtn);
     ctaSlot.appendChild(buyBtn);
   }
 
-  // Links mobile
   const mobileSlot = document.querySelector('[data-slot="nav-mobile-links"]');
   if (mobileSlot) {
     config.nav.links.forEach(link => {
@@ -125,7 +117,7 @@ function renderNav() {
       'border border-outline-variant/40 text-secondary px-8 py-3 font-bold uppercase text-xs tracking-widest rounded',
       { href: `mailto:${config.brand.email}` }
     );
-    mobileContact.textContent = 'Contactar Ventas';
+    mobileContact.textContent = 'Contacto';
     mobileSlot.appendChild(mobileContact);
 
     const mobileBuy = el('a',
@@ -146,24 +138,60 @@ function renderHero() {
   set('[data-hero="label"]',       config.hero.label);
   set('[data-hero="subheadline"]', config.hero.subheadline);
 
-  // Headline con salto de línea
   const h1 = document.querySelector('[data-hero="headline"]');
   if (h1) {
     const [line1, line2] = config.hero.headline.split('\n');
     h1.innerHTML = `${line1}<br><span class="italic text-primary">${line2 || ''}</span>`;
   }
 
-  // Imagen de fondo
   const bgImg = document.querySelector('[data-hero="bg"]');
   if (bgImg) {
     bgImg.src = config.hero.bgImage;
     bgImg.alt = `${config.brand.name} — Gin Premium Chileno`;
   }
 
-  // CTAs
+  // Coordenadas
+  const coords = document.querySelector('[data-hero="coordinates"]');
+  if (coords) coords.textContent = config.brand.coordinates;
+
   const ctaGroup = document.querySelector('[data-hero="ctas"]');
   if (ctaGroup) {
     config.hero.ctas.forEach(cta => ctaGroup.appendChild(createBtn(cta)));
+  }
+}
+
+function renderHistoria() {
+  const h = config.historia;
+
+  const set = (sel, val) => {
+    const n = document.querySelector(sel);
+    if (n) n.textContent = val;
+  };
+
+  set('[data-historia="label"]',   h.label);
+  set('[data-historia="body"]',    h.body);
+  set('[data-historia="quote"]',   h.quote);
+  set('[data-historia="author"]',  h.quoteAuthor);
+  set('[data-historia="location"]', h.distillery.location);
+
+  const headlineEl = document.querySelector('[data-historia="headline"]');
+  if (headlineEl) {
+    const [line1, line2] = h.headline.split('\n');
+    headlineEl.innerHTML = `${line1}<br><span class="italic text-primary">${line2 || ''}</span>`;
+  }
+
+  const statsWrap = document.querySelector('[data-historia="stats"]');
+  if (statsWrap) {
+    h.stats.forEach(stat => {
+      const item = el('div', 'text-center');
+      const val  = el('div', 'font-headline text-5xl text-primary tracking-tighter');
+      val.textContent = stat.value;
+      const lbl  = el('div', 'text-on-surface-variant text-xs uppercase tracking-widest mt-2');
+      lbl.textContent = stat.label;
+      item.appendChild(val);
+      item.appendChild(lbl);
+      statsWrap.appendChild(item);
+    });
   }
 }
 
@@ -176,7 +204,10 @@ function renderProducto() {
   set('[data-producto="label"]', config.producto.label);
 
   const h2 = document.querySelector('[data-producto="headline"]');
-  if (h2) h2.innerHTML = config.producto.headline;
+  if (h2) {
+    const [line1, line2] = config.producto.headline.split('\n');
+    h2.innerHTML = `${line1}<br><span class="italic text-primary">${line2 || ''}</span>`;
+  }
 
   set('[data-producto="body"]', config.producto.body);
 
@@ -186,6 +217,27 @@ function renderProducto() {
     img.alt = `${config.brand.name} — Botella`;
   }
 
+  // Perfil sensorial
+  const profileWrap = document.querySelector('[data-producto="profile"]');
+  if (profileWrap) {
+    config.producto.sensorProfile.forEach(p => {
+      const item = el('div', 'flex items-start gap-3');
+      const ic   = icon(p.icon, 0);
+      ic.className += ' text-secondary text-base';
+      const txt  = el('div', '');
+      const lbl  = el('span', 'text-[0.6rem] uppercase tracking-widest text-on-surface-variant block');
+      lbl.textContent = p.label;
+      const val  = el('span', 'text-sm text-on-surface');
+      val.textContent = p.value;
+      txt.appendChild(lbl);
+      txt.appendChild(val);
+      item.appendChild(ic);
+      item.appendChild(txt);
+      profileWrap.appendChild(item);
+    });
+  }
+
+  // Benefits
   const list = document.querySelector('[data-producto="benefits"]');
   if (list) {
     config.producto.benefits.forEach((b, i) => {
@@ -209,6 +261,28 @@ function renderProducto() {
       list.appendChild(li);
     });
   }
+
+  // Botánicos
+  const botGrid = document.querySelector('[data-producto="botanicals"]');
+  if (botGrid) {
+    config.producto.botanicals.forEach((b, i) => {
+      const card = el('div',
+        `bg-surface-container-low p-4 rounded-xl flex flex-col gap-2 hover:bg-surface-container-high transition-colors reveal reveal--delay-${(i % 4) + 1}`
+      );
+      const top = el('div', 'flex items-center gap-2');
+      const ic  = icon(b.icon, 0);
+      ic.className += ' text-secondary text-sm';
+      const name = el('span', 'font-headline text-sm text-on-surface');
+      name.textContent = b.name;
+      top.appendChild(ic);
+      top.appendChild(name);
+      const desc = el('p', 'text-on-surface-variant text-xs leading-relaxed');
+      desc.textContent = b.desc;
+      card.appendChild(top);
+      card.appendChild(desc);
+      botGrid.appendChild(card);
+    });
+  }
 }
 
 function renderExperiencia() {
@@ -224,8 +298,6 @@ function renderExperiencia() {
   const grid = document.querySelector('[data-experiencia="moments"]');
   if (!grid) return;
 
-  // Bento grid: 4 imágenes asimétricas
-  // Layout: [0]=col-span-2 row-span-2 | [1]=col-span-1 row-span-1 | [2]=col-span-1 row-span-2 | [3]=col-span-1 row-span-1
   const spanClasses = [
     'md:col-span-2 md:row-span-2',
     'md:col-span-1 md:row-span-1',
@@ -249,6 +321,80 @@ function renderExperiencia() {
   });
 }
 
+function renderRecetas() {
+  const r = config.recetas;
+
+  const set = (sel, val) => {
+    const n = document.querySelector(sel);
+    if (n) n.textContent = val;
+  };
+
+  set('[data-recetas="label"]',    r.label);
+  set('[data-recetas="sublabel"]', r.sublabel);
+
+  const h2 = document.querySelector('[data-recetas="headline"]');
+  if (h2) {
+    const [line1, line2] = r.headline.split('\n');
+    h2.innerHTML = `${line1}<br><span class="italic text-primary">${line2 || ''}</span>`;
+  }
+
+  const grid = document.querySelector('[data-recetas="items"]');
+  if (!grid) return;
+
+  r.items.forEach((coctel, i) => {
+    const card = el('div',
+      `bg-surface-container-low rounded-2xl overflow-hidden flex flex-col reveal reveal--delay-${i + 1}`
+    );
+
+    // Header
+    const header = el('div', 'p-8 pb-4');
+    const emoji  = el('span', 'text-4xl block mb-4');
+    emoji.textContent = coctel.emoji;
+    const name = el('h3', 'font-headline text-2xl tracking-tighter text-on-surface mb-3');
+    name.textContent = coctel.name;
+    const desc = el('p', 'text-on-surface-variant text-sm leading-relaxed');
+    desc.textContent = coctel.desc;
+    header.appendChild(emoji);
+    header.appendChild(name);
+    header.appendChild(desc);
+
+    // Ingredientes (details/summary)
+    const details = document.createElement('details');
+    details.className = 'border-t border-outline-variant/20 group';
+
+    const summary = document.createElement('summary');
+    summary.className = 'flex items-center justify-between px-8 py-5 cursor-pointer list-none text-xs uppercase tracking-widest font-bold text-secondary hover:text-primary transition-colors';
+    summary.innerHTML = `
+      <span>Ver ingredientes</span>
+      <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180" style="font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24">expand_more</span>
+    `;
+
+    const ingList = el('div', 'px-8 pb-6 space-y-2');
+    coctel.ingredients.forEach(ing => {
+      const row = el('div', 'flex justify-between text-sm py-1 border-b border-outline-variant/10');
+      const qty = el('span', 'text-secondary font-bold font-body tabular-nums');
+      qty.textContent = ing.qty;
+      const item = el('span', 'text-on-surface-variant');
+      item.textContent = ing.item;
+      row.appendChild(qty);
+      row.appendChild(item);
+      ingList.appendChild(row);
+    });
+
+    // Método
+    const method = el('p', 'px-8 pb-6 text-xs text-on-surface-variant/70 italic leading-relaxed');
+    method.textContent = coctel.method;
+
+    details.appendChild(summary);
+    details.appendChild(ingList);
+    details.appendChild(method);
+
+    card.appendChild(header);
+    card.appendChild(details);
+    grid.appendChild(card);
+  });
+}
+
 function renderTestimonios() {
   const h2 = document.querySelector('[data-testimonios="headline"]');
   if (h2) h2.textContent = config.testimonios.headline;
@@ -261,7 +407,6 @@ function renderTestimonios() {
       `bg-surface-container-low p-10 rounded-lg border-b border-secondary/10 reveal reveal--delay-${i + 1}`
     );
 
-    // Estrellas con Material Symbols
     const starsWrap = el('div', 'flex text-secondary mb-6');
     for (let s = 1; s <= 5; s++) {
       starsWrap.appendChild(icon('star', s <= t.stars ? 1 : 0));
@@ -278,6 +423,71 @@ function renderTestimonios() {
     card.appendChild(author);
     grid.appendChild(card);
   });
+}
+
+function renderDistribuidores() {
+  const d = config.distribuidores;
+
+  const set = (sel, val) => {
+    const n = document.querySelector(sel);
+    if (n) n.textContent = val;
+  };
+
+  set('[data-distribuidores="label"]',    d.label);
+  set('[data-distribuidores="sublabel"]', d.sublabel);
+
+  const h2 = document.querySelector('[data-distribuidores="headline"]');
+  if (h2) {
+    const [line1, line2] = d.headline.split('\n');
+    h2.innerHTML = `${line1}<br><span class="italic text-primary">${line2 || ''}</span>`;
+  }
+
+  const grid = document.querySelector('[data-distribuidores="ciudades"]');
+  if (grid) {
+    d.ciudades.forEach((ciudad, i) => {
+      const card = el('div',
+        `bg-surface-container-low p-8 rounded-2xl reveal reveal--delay-${i + 1}`
+      );
+
+      const header = el('div', 'flex items-center gap-3 mb-6');
+      const ic     = icon(ciudad.icon, 0);
+      ic.className += ' text-secondary';
+      const title  = el('h3', 'font-headline text-xl tracking-tighter text-on-surface');
+      title.textContent = ciudad.ciudad;
+      header.appendChild(ic);
+      header.appendChild(title);
+
+      const list = el('ul', 'space-y-3');
+      ciudad.puntos.forEach(punto => {
+        const li = el('li', 'flex items-start gap-2');
+        const dot = el('span', 'text-secondary mt-1 text-xs');
+        dot.textContent = '●';
+        const wrap = el('div', '');
+        const nombre = el('span', 'text-sm text-on-surface');
+        nombre.textContent = punto.nombre;
+        wrap.appendChild(nombre);
+        if (punto.nota) {
+          const nota = el('span', 'block text-xs text-secondary font-bold uppercase tracking-wider mt-0.5');
+          nota.textContent = punto.nota;
+          wrap.appendChild(nota);
+        }
+        li.appendChild(dot);
+        li.appendChild(wrap);
+        list.appendChild(li);
+      });
+
+      card.appendChild(header);
+      card.appendChild(list);
+      grid.appendChild(card);
+    });
+  }
+
+  // CTA online
+  const ctaWrap = document.querySelector('[data-distribuidores="cta"]');
+  if (ctaWrap) {
+    const btn = createBtn({ ...d.onlineCta, type: 'primary' });
+    ctaWrap.appendChild(btn);
+  }
 }
 
 function renderPrecios() {
@@ -301,12 +511,10 @@ function renderPrecios() {
     const formattedPrice = tier.price.toLocaleString('es-CL');
 
     if (tier.highlight) {
-      // Card destacada — fondo primary
       const card = el('div',
         `bg-primary text-on-primary p-12 rounded-xl flex flex-col justify-between relative overflow-hidden reveal reveal--delay-${i + 1}`
       );
 
-      // Badge diagonal
       if (tier.badge) {
         const badge = el('div',
           'absolute -top-4 -right-12 bg-white/20 text-white text-[0.6rem] font-bold px-12 py-2 rotate-45 uppercase tracking-widest'
@@ -316,7 +524,6 @@ function renderPrecios() {
       }
 
       const body = el('div', '');
-
       const header = el('div', 'flex justify-between items-start mb-8');
       const title = el('h3', 'font-headline text-2xl uppercase tracking-tighter');
       title.textContent = tier.label;
@@ -346,13 +553,11 @@ function renderPrecios() {
       grid.appendChild(card);
 
     } else {
-      // Card normal — outline
       const card = el('div',
         `bg-surface p-12 rounded-xl flex flex-col justify-between group hover:bg-surface-container-low transition-all duration-500 reveal reveal--delay-${i + 1}`
       );
 
       const body = el('div', '');
-
       const header = el('div', 'flex justify-between items-start mb-8');
       const title = el('h3', 'font-headline text-2xl uppercase tracking-tighter');
       title.textContent = tier.label;
@@ -381,7 +586,6 @@ function renderPrecios() {
       body.appendChild(featuresList);
       card.appendChild(body);
 
-      // Botón outline que se llena al hacer hover en la card
       const btn = el('a',
         'w-full text-center border border-primary text-primary py-4 rounded-lg font-bold uppercase text-xs tracking-widest group-hover:bg-primary group-hover:text-on-primary transition-all duration-300',
         {
@@ -408,7 +612,7 @@ function renderUrgencyBanner() {
   );
 
   const left = el('div', 'flex items-center gap-6');
-  const warningIcon = icon('warning', 1);
+  const warningIcon = icon('bolt', 1);
   warningIcon.className = 'material-symbols-outlined text-on-primary text-5xl';
   const textWrap = el('div', '');
   const headline = el('h2', 'font-headline text-3xl text-on-primary leading-none mb-2 tracking-tighter');
@@ -442,8 +646,9 @@ function renderFooter() {
     if (n) n.textContent = val;
   };
 
-  set('[data-footer="copy"]', config.footer.copy);
-  set('[data-footer="note"]', config.footer.note);
+  set('[data-footer="copy"]',   config.footer.copy);
+  set('[data-footer="note"]',   config.footer.note);
+  set('[data-footer="minsal"]', config.footer.minsal);
 
   const logoSlot = document.querySelector('[data-slot="footer-logo"]');
   if (logoSlot) logoSlot.textContent = config.brand.name;
@@ -472,9 +677,12 @@ function renderFooter() {
 export function renderAll() {
   renderNav();
   renderHero();
+  renderHistoria();
   renderProducto();
   renderExperiencia();
+  renderRecetas();
   renderTestimonios();
+  renderDistribuidores();
   renderPrecios();
   renderUrgencyBanner();
   renderFooter();

@@ -98,3 +98,13 @@
 .nav--scrolled {
   background-color: color-mix(in srgb, #020f1e 85%, transparent);
 }
+
+/* ── Details/Summary (recetas — ingredientes expandibles) ─── */
+details summary::-webkit-details-marker { display: none; }
+details[open] summary span.expand-icon  { transform: rotate(180deg); }
+
+/* ── MINSAL warning — tipografía extra pequeña ───────────────── */
+[data-footer="minsal"] {
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+}

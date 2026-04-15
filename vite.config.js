@@ -10,6 +10,9 @@ export default defineConfig({
       overlay: true, // muestra errores de compilación como overlay en el browser
     },
   },
+  build: {
+    outDir: 'dist',
+  },
   preview: {
     port: 4173,
   },

@@ -2,6 +2,7 @@
 node_modules/
 
 # Build output
+public/
 dist/
 
 # Variables de entorno — NUNCA subir a Git
